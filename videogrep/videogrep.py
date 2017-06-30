@@ -1,13 +1,14 @@
-import os
-import re
+from os import listdir, remove
+from os.path import abspath, dirname, isfile, splitext #basename
+from re import MULTILINE, sub, findall, search
 import random
 import gc
-import subprocess
+from subprocess import PIPE, PIPE, Popen
 from collections import OrderedDict
 
 import pattern
 from . import searcher
-import audiogrep
+from audiogrep import convert_to_wav, transcribe, search as agsearch
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.compositing.concatenate import concatenate
@@ -19,10 +20,10 @@ BATCH_SIZE = 20
 
 
 def get_fps(filename):
-    process = subprocess.Popen(['ffmpeg', '-i', filename], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = Popen(['ffmpeg', '-i', filename], stdout=PIPE, stderr=STDOUT)
     returncode = process.wait()
     output = process.stdout.read()
-    fps = re.findall(r'\d+ fps', output, flags=re.MULTILINE)
+    fps = findall(r'\d+ fps', output, flags=MULTILINE)
     try:
         return int(fps[0].split(' ')[0])
     except:
@@ -34,10 +35,12 @@ def make_edl_segment(n, time_in, time_out, rec_in, rec_out, full_name, filename,
     if len(full_name) > 7:
         reel = full_name[0:7]
 
-    template = '{} {} AA/V  C        {} {} {} {}\n* FROM CLIP NAME:  {}\n* COMMENT: \n FINAL CUT PRO REEL: {} REPLACED BY: {}\n\n'
+    template = '{} {} AA/V  C {} {} {} {}\n* FROM CLIP NAME:  {}\n* COMMENT: \n FINAL CUT PRO REEL: {} REPLACED BY: {}\n\n'
 
     # print time_in, time_out, rec_in, rec_out
-    # print Timecode(fps, start_seconds=time_in), Timecode(fps, start_seconds=time_out), Timecode(fps, start_seconds=rec_in), Timecode(fps, start_seconds=rec_out)
+    # print Timecode(fps, start_seconds=time_in), Timecode(fps, 
+    # start_seconds=time_out), Timecode(fps, start_seconds=rec_in), 
+    # Timecode(fps, start_seconds=rec_out)
     #
     # print ''
     out = template.format(
@@ -79,7 +82,7 @@ def make_edl(timestamps, name):
         rec_out = rec_in + duration #timestamp['duration']
 
         full_name = 'reel_{}'.format(n)
-        # full_name = os.path.basename(timestamp['file'])
+        # full_name = basename(timestamp['file'])
 
         filename = timestamp['file']
 
@@ -92,8 +95,8 @@ def make_edl(timestamps, name):
 
 
 def create_timestamps(inputfiles):
-    files = audiogrep.convert_to_wav(inputfiles)
-    audiogrep.transcribe(files)
+    files = convert_to_wav(inputfiles)
+    transcribe(files)
 
 
 def convert_timespan(timespan):
@@ -122,7 +125,7 @@ def clean_srt(srt):
     """
     with open(srt, 'r') as f:
         text = f.read()
-    text = re.sub(r'^\d+[\n\r]', '', text, flags=re.MULTILINE)
+    text = sub(r'^\d+[\n\r]', '', text, flags=MULTILINE)
     lines = text.splitlines()
     output = OrderedDict()
     key = ''
@@ -141,10 +144,10 @@ def clean_srt(srt):
 
 def cleanup_log_files(outputfile):
     """Search for and remove temp log files found in the output directory."""
-    d = os.path.dirname(os.path.abspath(outputfile))
-    logfiles = [f for f in os.listdir(d) if f.endswith('ogg.log')]
+    d = dirname(abspath(outputfile))
+    logfiles = [f for f in listdir(d) if f.endswith('ogg.log')]
     for f in logfiles:
-        os.remove(f)
+        remove(f)
 
 
 def demo_supercut(composition, padding):
@@ -211,19 +214,19 @@ def create_supercut_in_batches(composition, outputfile, padding):
 
     # remove partial video files
     for filename in batch_comp:
-        os.remove(filename)
+        remove(filename)
 
     cleanup_log_files(outputfile)
 
 
-def search_line(line, search, searchtype):
+def search_line(line, search_term, searchtype):
     """Return True if search term is found in given line, False otherwise."""
     if searchtype == 're':
-        return re.search(search, line)  #, re.IGNORECASE)
+        return agsearch(search_term, line)  #, re.IGNORECASE)
     elif searchtype == 'pos':
-        return searcher.search_out(line, search)
+        return searcher.search_out(line, search_term)
     elif searchtype == 'hyper':
-        return searcher.hypernym_search(line, search)
+        return searcher.hypernym_search(line, search_term)
 
 
 def get_subtitle_files(inputfile):
@@ -234,7 +237,7 @@ def get_subtitle_files(inputfile):
         filename = f.split('.')
         filename[-1] = 'srt'
         srt = '.'.join(filename)
-        if os.path.isfile(srt):
+        if isfile(srt):
             srts.append(srt)
 
     if len(srts) == 0:
@@ -243,7 +246,7 @@ def get_subtitle_files(inputfile):
     return srts
 
 
-def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
+def compose_from_srts(srts, search_term, searchtype, padding=0, sync=0):
     """Takes a list of subtitle (srt) filenames, search term and search type
     and, returns a list of timestamps for composing a supercut.
     """
@@ -263,7 +266,7 @@ def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
         print("[+] Searching for video file corresponding to '" + srt + "'.")
         for ext in usable_extensions:
             tempVideoFile = srt.replace('.srt', '.' + ext)
-            if os.path.isfile(tempVideoFile):
+            if isfile(tempVideoFile):
                 videofile = tempVideoFile
                 foundVideoFile = True
                 print("[+] Found '" + tempVideoFile + "'.")
@@ -279,7 +282,7 @@ def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
                     line = lines[timespan].strip()
 
                     # If this line contains the search term
-                    if search_line(line, search, searchtype):
+                    if search_line(line, search_term, searchtype):
 
                         foundSearchTerm = True
 
@@ -291,7 +294,7 @@ def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
 
                 # If the search was unsuccessful.
                 if foundSearchTerm is False:
-                    print("[!] Search term '" + search + "'" + " was not found is subtitle file '" + srt + "'.")
+                    print("[!] Search term '" + search_term + "'" + " was not found is subtitle file '" + srt + "'.")
 
             # If no subtitles were found in the current file.
             else:
@@ -309,7 +312,7 @@ def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
     return composition
 
 
-def compose_from_transcript(files, search, searchtype):
+def compose_from_transcript(files, search_term, searchtype):
     """Takes transcripts created by audiogrep/pocketsphinx, a search and search type
     and returns a list of timestamps for creating a supercut"""
 
@@ -319,7 +322,7 @@ def compose_from_transcript(files, search, searchtype):
         if searchtype == 're':
             searchtype = 'sentence'
 
-        segments = audiogrep.search(search, files, mode=searchtype, regex=True)
+        segments = search(search, files, mode=searchtype, regex=True)
         for seg in segments:
             seg['file'] = seg['file'].replace('.transcription.txt', '')
             seg['line'] = seg['words']
@@ -340,7 +343,7 @@ def compose_from_transcript(files, search, searchtype):
     return final_segments
 
 
-def videogrep(inputfile, outputfile, search, searchtype, maxclips=0, padding=0, test=False, randomize=False, sync=0, use_transcript=False):
+def videogrep(inputfile, outputfile, search_term, searchtype, maxclips=0, padding=0, test=False, randomize=False, sync=0, use_transcript=False):
     """Search through and find all instances of the search term in an srt or transcript,
     create a supercut around that instance, and output a new video file
     comprised of those supercuts.
@@ -360,11 +363,11 @@ def videogrep(inputfile, outputfile, search, searchtype, maxclips=0, padding=0, 
 
     # If the search term was not found in any subtitle file...
     if len(composition) == 0:
-        print("[!] Search term '" + search + "'" + " was not found in any file.")
+        print("[!] Search term '" + search_term + "'" + " was not found in any file.")
         exit(1)
 
     else:
-        print("[+] Search term '" + search + "'" + " was found in " + str(len(composition)) + " places.")
+        print("[+] Search term '" + search_term + "'" + " was found in " + str(len(composition)) + " places.")
 
         # apply padding and sync
         for c in composition:
@@ -380,7 +383,7 @@ def videogrep(inputfile, outputfile, search, searchtype, maxclips=0, padding=0, 
         if test is True:
             demo_supercut(composition, padding)
         else:
-            if os.path.splitext(outputfile)[1].lower() == '.edl':
+            if splitext(outputfile)[1].lower() == '.edl':
                 make_edl(composition, outputfile)
             else:
                 if len(composition) > BATCH_SIZE:
@@ -391,11 +394,11 @@ def videogrep(inputfile, outputfile, search, searchtype, maxclips=0, padding=0, 
 
 
 def main():
-    import argparse
+    from argparse import ArgumentParser
 
-    parser = argparse.ArgumentParser(description='Generate a "supercut" of one or more video files by searching through subtitle tracks.')
+    parser = ArgumentParser(description='Generate a "supercut" of one or more video files by searching through subtitle tracks.')
     parser.add_argument('--input', '-i', dest='inputfile', nargs='*', required=True, help='video or subtitle file, or folder')
-    parser.add_argument('--search', '-s', dest='search', help='search term')
+    parser.add_argument('--search_term', '-s', dest='search_term', help='search term')
     parser.add_argument('--search-type', '-st', dest='searchtype', default='re', choices=['re', 'pos', 'hyper', 'fragment', 'franken', 'word'], help='type of search')
     parser.add_argument('--use-transcript', '-t', action='store_true', dest='use_transcript', help='Use a transcript generated by pocketsphinx instead of srt files')
     parser.add_argument('--max-clips', '-m', dest='maxclips', type=int, default=0, help='maximum number of clips to use for the supercut')
@@ -409,14 +412,13 @@ def main():
 
     args = parser.parse_args()
 
-    if not args.transcribe:
-        if args.search is None:
-            parser.error('argument --search/-s is required')
+    if args.search_term is None:
+        parser.error('Argument --search_term/-s is required')
 
     if args.transcribe:
         create_timestamps(args.inputfile)
     else:
-        videogrep(args.inputfile, args.outputfile, args.search, args.searchtype, args.maxclips, args.padding, args.demo, args.randomize, args.sync, args.use_transcript)
+        videogrep(args.inputfile, args.outputfile, args.search_term, args.searchtype, args.maxclips, args.padding, args.demo, args.randomize, args.sync, args.use_transcript)
 
 
 if __name__ == '__main__':
