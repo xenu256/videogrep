@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 import pattern
 from . import searcher
-from audiogrep import convert_to_wav, transcribe, search as agsearch
+from audiogrep import convert_to_wav, transcribe, search as audiogrepsearch
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.compositing.concatenate import concatenate
@@ -38,8 +38,8 @@ def make_edl_segment(n, time_in, time_out, rec_in, rec_out, full_name, filename,
     template = '{} {} AA/V  C {} {} {} {}\n* FROM CLIP NAME:  {}\n* COMMENT: \n FINAL CUT PRO REEL: {} REPLACED BY: {}\n\n'
 
     # print time_in, time_out, rec_in, rec_out
-    # print Timecode(fps, start_seconds=time_in), Timecode(fps, 
-    # start_seconds=time_out), Timecode(fps, start_seconds=rec_in), 
+    # print Timecode(fps, start_seconds=time_in), Timecode(fps,
+    # start_seconds=time_out), Timecode(fps, start_seconds=rec_in),
     # Timecode(fps, start_seconds=rec_out)
     #
     # print ''
@@ -222,7 +222,7 @@ def create_supercut_in_batches(composition, outputfile, padding):
 def search_line(line, search_term, searchtype):
     """Return True if search term is found in given line, False otherwise."""
     if searchtype == 're':
-        return agsearch(search_term, line)  #, re.IGNORECASE)
+        return search(search_term, line)  #, re.IGNORECASE)
     elif searchtype == 'pos':
         return searcher.search_out(line, search_term)
     elif searchtype == 'hyper':
@@ -322,7 +322,7 @@ def compose_from_transcript(files, search_term, searchtype):
         if searchtype == 're':
             searchtype = 'sentence'
 
-        segments = search(search, files, mode=searchtype, regex=True)
+        segments = audiogrepsearch(search_term, files, mode=searchtype, regex=True)
         for seg in segments:
             seg['file'] = seg['file'].replace('.transcription.txt', '')
             seg['line'] = seg['words']
