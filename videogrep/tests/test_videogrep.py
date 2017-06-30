@@ -7,7 +7,7 @@ from videogrep import videogrep
 filename = 'TEST_OUTPUT.mp4'
 
 def test_videogrep():
-    videogrep.videogrep('test_videos/test.mp4', filename, 'video', 'pos')
+    videogrep('test_videos/test.mp4', filename, 'video', 'pos')
     files = os.listdir('.')
     assert filename in files
 

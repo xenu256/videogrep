@@ -1,13 +1,13 @@
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import time
 import sys
 
 from pytube import YouTube
-import getyoutubecc
+from . import getyoutubecc
 from bs4 import BeautifulSoup
 
 def get_urls(url):
-    data = urllib.urlopen(url).read()
+    data = urllib.request.urlopen(url).read()
     soup = BeautifulSoup(data)
     soupy_links = soup.select('a.yt-uix-sessionlink')
     urls = ['http://youtube.com' + link.get('href') for link in soupy_links\
@@ -35,7 +35,7 @@ def search_all_files(search_url, youtube_object=YouTube()):
     yt = youtube_object
     for url in urls:
         try:
-            print "downloading " + url
+            print("downloading " + url)
             yt.url = url
             video = yt.get('mp4', '720p')
             filename = yt.filename
@@ -45,4 +45,4 @@ def search_all_files(search_url, youtube_object=YouTube()):
             cc.writeSrtFile(filename + '.srt')
             time.sleep(.1)
         except:
-            print "couldn't download " + url
+            print("couldn't download " + url)

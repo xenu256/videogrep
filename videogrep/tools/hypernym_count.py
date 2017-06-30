@@ -33,4 +33,4 @@ for word, pos in tag(text):
 
 for hypernym in sorted(hypernyms, key=hypernyms.get, reverse=True):
     count = hypernyms[hypernym]
-    print hypernym + ": " + str(count)
+    print(hypernym + ": " + str(count))

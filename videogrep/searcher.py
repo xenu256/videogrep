@@ -84,4 +84,4 @@ if __name__ == '__main__':
 
     results = list_hypernyms(sys.argv[1])
     for result in results:
-        print result
+        print(result)

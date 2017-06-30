@@ -41,5 +41,4 @@ for i in range(len(pos) - n + 1):
 for ngram in sorted(ngrams, key=ngrams.get, reverse=True):
     count = ngrams[ngram]
     if count > 4:
-        print ' '.join(ngram) + ": " + str(count)
-
+        print(' '.join(ngram) + ": " + str(count))

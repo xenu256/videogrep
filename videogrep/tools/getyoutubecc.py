@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import urllib
-import HTMLParser
+import urllib.request, urllib.parse, urllib.error
+import html.parser
 import re
 import codecs
 
@@ -35,17 +35,17 @@ class getyoutubecc():
         """ """
         #Obtain the file from internet
         cc_url = "http://www.youtube.com/api/timedtext?v=" + video_id + "&lang=" + lang + "&name=" + track + "&tlang=" + tlang
-        print "video id: " + video_id
-        print "video language: " + lang
-        print "video track: " + track
-        print "translate video to: " + tlang
+        print("video id: " + video_id)
+        print("video language: " + lang)
+        print("video track: " + track)
+        print("translate video to: " + tlang)
         try:
-            cc = urllib.urlopen(cc_url).read() 
+            cc = urllib.request.urlopen(cc_url).read() 
         except:
-            print "Problem with connection"
+            print("Problem with connection")
         #parse the file to make a easy to modify object with the captions and its time
         if self.caption_obj == []:
-          print "url " + cc_url + " was an empty response. Multitrack video?"
+            print("url " + cc_url + " was an empty response. Multitrack video?")
         self.caption_obj = self._parseXml(cc);
 
     def writeSrtFile(self,filename="caption"):
@@ -60,7 +60,7 @@ class getyoutubecc():
                 [{'texlines': [u"So, I'm going to rewrite this", 'in a more concise form as'],
                 'time': {'hours':'1', 'min':'2','sec':44,'msec':232} }]
         """
-        htmlpar = HTMLParser.HTMLParser()
+        htmlpar = html.parser.HTMLParser()
         cc = cc.split("</text>") # ['<text start="2997.929">So, it will\nhas time', '<text start="3000.929">blah', ..]
         captions = []
         for line in cc:
@@ -69,7 +69,7 @@ class getyoutubecc():
                 time = ( int(time[0]), int(0 if not time[1] else time[1]) )
                     #convert seconds and millisec to int
                 text = re.search(r'">(.*)', line, re.DOTALL).group(1) # extract text i.e. 'So, it will\nhas time'
-                textlines = [ htmlpar.unescape(htmlpar.unescape( unicode(lineunparsed,"utf-8") )) for lineunparsed in text.split('\n') ] 
+                textlines = [ htmlpar.unescape(htmlpar.unescape( str(lineunparsed,"utf-8") )) for lineunparsed in text.split('\n') ] 
                     #unscape chars like &amp; or &#39;
                 ntime = {'hours':time[0]/3600,"min":time[0]%3600/60,"sec":time[0]%3600%60,"msec":time[1]}
                 captions.append({'time':ntime,'textlines':textlines})
@@ -117,33 +117,33 @@ if __name__ == "__main__":
     tlang = ''
 
     try:
-      opts, args = getopt.getopt(sys.argv[1:],"hv:l:t:T:",["videoid=","language=","track=","translate="])
+        opts, args = getopt.getopt(sys.argv[1:],"hv:l:t:T:",["videoid=","language=","track=","translate="])
     except getopt.GetoptError:
-        print 'getyoutubecc -v <video_id> -l <language_id> -t <track_name> -T <translate_to>'
-        print 'Example: getyoutubecc -v pNiFoYt69-w -l fr -t french -T es'
-        print 'Example: getyoutubecc -v 2XraaWefBd8 -l en '
+        print('getyoutubecc -v <video_id> -l <language_id> -t <track_name> -T <translate_to>')
+        print('Example: getyoutubecc -v pNiFoYt69-w -l fr -t french -T es')
+        print('Example: getyoutubecc -v 2XraaWefBd8 -l en ')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-          print 'getyoutubecc -v <video_id> -l <language_id> -t <track_name> -T <translate_to>'
-          print 'Example: getyoutubecc -v pNiFoYt69-w -l fr -t french -T es'
-          print 'Example: getyoutubecc -v 2XraaWefBd8 -l en '
-          print 'NOTE: if video has a track name, the -t argument is mandatory ' 
-          sys.exit()
+            print('getyoutubecc -v <video_id> -l <language_id> -t <track_name> -T <translate_to>')
+            print('Example: getyoutubecc -v pNiFoYt69-w -l fr -t french -T es')
+            print('Example: getyoutubecc -v 2XraaWefBd8 -l en ')
+            print('NOTE: if video has a track name, the -t argument is mandatory ') 
+            sys.exit()
         elif opt in ("-v", "--videoid"):
-          videoid = arg
+            videoid = arg
         elif opt in ("-l", "--language"):
-          lang = arg
+            lang = arg
         elif opt in ("-t", "--track"):
-          track = arg
+            track = arg
         elif opt in ("-T", "--translate"):
-          tlang = arg
+            tlang = arg
     if videoid != '':
-      print "downloading " + videoid + " captions"
-      cc = getyoutubecc(videoid, lang, track, tlang)
-      cc.writeSrtFile(videoid + '.srt')
+        print("downloading " + videoid + " captions")
+        cc = getyoutubecc(videoid, lang, track, tlang)
+        cc.writeSrtFile(videoid + '.srt')
     else:
-      print 'getyoutubecc -v <video_id> -l <language_id> -t <track_name> -T <translate_to>'
-      print 'Example: getyoutubecc -v pNiFoYt69-w -l fr -t french -T es'
-      print 'Example: getyoutubecc -v 2XraaWefBd8 -l en '
-      print 'NOTE: if video has a track name, the -t argument is mandatory '
+        print('getyoutubecc -v <video_id> -l <language_id> -t <track_name> -T <translate_to>')
+        print('Example: getyoutubecc -v pNiFoYt69-w -l fr -t french -T es')
+        print('Example: getyoutubecc -v 2XraaWefBd8 -l en ')
+        print('NOTE: if video has a track name, the -t argument is mandatory ')

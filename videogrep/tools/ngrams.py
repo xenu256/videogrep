@@ -59,4 +59,4 @@ if __name__ == '__main__':
         count = ngrammer.ngramcount[gram]
         word = ' '.join(gram)
         if count > threshold and len(word) > 3:
-            print  count, word
+            print(count, word)

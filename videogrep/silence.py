@@ -1,4 +1,4 @@
-import videogrep
+from . import videogrep
 import os
 
 def silence(inputfile, outputfile, maxclips, minsilence, maxsilence, padding=0, test=False, randomize=False):
@@ -15,7 +15,7 @@ def silence(inputfile, outputfile, maxclips, minsilence, maxsilence, padding=0, 
     timestamps = []
     for srt in srts:
         lines = videogrep.clean_srt(srt)
-        for timestamp in lines.keys():
+        for timestamp in list(lines.keys()):
             start, end = videogrep.convert_timespan(timestamp)
             for ext in videogrep.usable_extensions:
                 videofile = srt.replace('.srt', '.' + ext)
@@ -42,7 +42,7 @@ def silence(inputfile, outputfile, maxclips, minsilence, maxsilence, padding=0, 
         else:
             videogrep.create_supercut(composition, outputfile, 0)
     else:
-        print "No silence found"
+        print("No silence found")
 
 if __name__ == '__main__':
     import argparse

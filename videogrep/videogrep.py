@@ -6,13 +6,13 @@ import subprocess
 from collections import OrderedDict
 
 import pattern
-import searcher
+from . import searcher
 import audiogrep
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.compositing.concatenate import concatenate
 
-from timecode import Timecode
+from .timecode import Timecode
 
 usable_extensions = ['mp4', 'avi', 'mov', 'mkv', 'm4v']
 BATCH_SIZE = 20
@@ -155,7 +155,7 @@ def demo_supercut(composition, padding):
         end = c['end']
         if i > 0 and composition[i - 1]['file'] == c['file'] and start < composition[i - 1]['end']:
             start = start + padding
-        print "{1} to {2}:\t{0}".format(line, start, end)
+        print("{1} to {2}:\t{0}".format(line, start, end))
 
 
 def create_supercut(composition, outputfile, padding):
@@ -175,10 +175,10 @@ def create_supercut(composition, outputfile, padding):
     videofileclips = dict([(f, VideoFileClip(f)) for f in all_filenames])
     cut_clips = [videofileclips[c['file']].subclip(c['start'], c['end']) for c in composition]
 
-    print "[+] Concatenating clips."
+    print("[+] Concatenating clips.")
     final_clip = concatenate(cut_clips)
 
-    print "[+] Writing ouput file."
+    print("[+] Writing ouput file.")
     final_clip.to_videofile(outputfile, codec="libx264", temp_audiofile='temp-audio.m4a', remove_temp=True, audio_codec='aac')
 
 
@@ -238,10 +238,10 @@ def get_subtitle_files(inputfile):
             srts.append(srt)
 
     if len(srts) == 0:
-        print "[!] No subtitle files were found."
-        return False
+        print("[!] No subtitle files were found.")
 
     return srts
+
 
 def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
     """Takes a list of subtitle (srt) filenames, search term and search type
@@ -251,21 +251,22 @@ def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
     foundSearchTerm = False
 
     # Iterate over each subtitles file.
+    assert isinstance(srts, list)
     for srt in srts:
 
-        print srt
+        print(srt)
         lines = clean_srt(srt)
 
         videofile = ""
         foundVideoFile = False
 
-        print "[+] Searching for video file corresponding to '" + srt + "'."
+        print("[+] Searching for video file corresponding to '" + srt + "'.")
         for ext in usable_extensions:
             tempVideoFile = srt.replace('.srt', '.' + ext)
             if os.path.isfile(tempVideoFile):
                 videofile = tempVideoFile
                 foundVideoFile = True
-                print "[+] Found '" + tempVideoFile + "'."
+                print("[+] Found '" + tempVideoFile + "'.")
 
         # If a correspndong video file was found for this subtitles file...
         if foundVideoFile:
@@ -274,7 +275,7 @@ def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
             if lines:
 
                 # Iterate over each line in the current subtitles file.
-                for timespan in lines.keys():
+                for timespan in list(lines.keys()):
                     line = lines[timespan].strip()
 
                     # If this line contains the search term
@@ -290,20 +291,20 @@ def compose_from_srts(srts, search, searchtype, padding=0, sync=0):
 
                 # If the search was unsuccessful.
                 if foundSearchTerm is False:
-                    print "[!] Search term '" + search + "'" + " was not found is subtitle file '" + srt + "'."
+                    print("[!] Search term '" + search + "'" + " was not found is subtitle file '" + srt + "'.")
 
             # If no subtitles were found in the current file.
             else:
-                print "[!] Subtitle file '" + srt + "' is empty."
+                print("[!] Subtitle file '" + srt + "' is empty.")
 
         # If no video file was found...
         else:
-            print "[!] No video file was found which corresponds to subtitle file '" + srt + "'."
-            print "[!] The following video formats are currently supported:"
+            print("[!] No video file was found which corresponds to subtitle file '" + srt + "'.")
+            print("[!] The following video formats are currently supported:")
             extList = ""
             for ext in usable_extensions:
                 extList += ext + ", "
-            print extList
+            print(extList)
 
     return composition
 
@@ -359,11 +360,11 @@ def videogrep(inputfile, outputfile, search, searchtype, maxclips=0, padding=0, 
 
     # If the search term was not found in any subtitle file...
     if len(composition) == 0:
-        print "[!] Search term '" + search + "'" + " was not found in any file."
+        print("[!] Search term '" + search + "'" + " was not found in any file.")
         exit(1)
 
     else:
-        print "[+] Search term '" + search + "'" + " was found in " + str(len(composition)) + " places."
+        print("[+] Search term '" + search + "'" + " was found in " + str(len(composition)) + " places.")
 
         # apply padding and sync
         for c in composition:
@@ -383,7 +384,7 @@ def videogrep(inputfile, outputfile, search, searchtype, maxclips=0, padding=0, 
                 make_edl(composition, outputfile)
             else:
                 if len(composition) > BATCH_SIZE:
-                    print "[+} Starting batch job."
+                    print("[+} Starting batch job.")
                     create_supercut_in_batches(composition, outputfile, padding)
                 else:
                     create_supercut(composition, outputfile, padding)
@@ -410,7 +411,7 @@ def main():
 
     if not args.transcribe:
         if args.search is None:
-             parser.error('argument --search/-s is required')
+            parser.error('argument --search/-s is required')
 
     if args.transcribe:
         create_timestamps(args.inputfile)
@@ -420,4 +421,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

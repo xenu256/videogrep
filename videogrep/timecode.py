@@ -114,7 +114,7 @@ class Timecode(object):
     def tc_to_frames(self, timecode):
         """Converts the given timecode to frames
         """
-        hours, minutes, seconds, frames = map(int, timecode.split(':'))
+        hours, minutes, seconds, frames = list(map(int, timecode.split(':')))
 
         ffps = float(self._framerate)
 
@@ -217,7 +217,7 @@ class Timecode(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         self.add_frames(1)
         return self
 
