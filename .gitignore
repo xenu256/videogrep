@@ -6,3 +6,6 @@ dist
 *.DS_Store
 *.egg-info
 *.bak
+*.transcription.txt
+*.mp4
+*.mkv
