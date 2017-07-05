@@ -90,7 +90,7 @@ def make_edl(timestamps, name):
 
         rec_in = rec_out
 
-    with open(name, 'w') as outfile:
+    with open(name, 'wb') as outfile:
         outfile.write(out)
 
 
@@ -123,9 +123,9 @@ def clean_srt(srt):
     """Remove damaging line breaks and numbers from srt files and return a
     dictionary.
     """
-    with open(srt, 'r') as f:
+    with open(srt, 'rb') as f:
         text = f.read()
-    text = sub(r'^\d+[\n\r]', '', text, flags=MULTILINE)
+    text = sub(r'^\d+[\n\r]', '', str(text, "utf-8"), flags=MULTILINE)
     lines = text.splitlines()
     output = OrderedDict()
     key = ''
@@ -273,13 +273,16 @@ def compose_from_srts(srts, search_term, searchtype, padding=0, sync=0):
 
         # If a correspndong video file was found for this subtitles file...
         if foundVideoFile:
-
             # Check that the subtitles file contains subtitles.
-            if lines:
-
+            print("Lines")
+            print(lines.keys())
+            print("----------------------------------")
+            if len(lines.keys()) > 0:
                 # Iterate over each line in the current subtitles file.
-                for timespan in list(lines.keys()):
-                    line = lines[timespan].strip()
+                for time_span in list(lines.keys()):
+                    print("timestamp")
+                    print(time_span)
+                    line = lines[time_span].strip()
 
                     # If this line contains the search term
                     if search_line(line, search_term, searchtype):
@@ -287,15 +290,14 @@ def compose_from_srts(srts, search_term, searchtype, padding=0, sync=0):
                         foundSearchTerm = True
 
                         # Extract the timespan for this subtitle.
-                        start, end = convert_timespan(timespan)
+                        start, end = convert_timespan(time_span)
 
                         # Record this occurance of the search term.
-                        composition.append({'file': videofile, 'time': timespan, 'start': start, 'end': end, 'line': line})
+                        composition.append({'file': videofile, 'time': time_span, 'start': start, 'end': end, 'line': line})
 
                 # If the search was unsuccessful.
                 if foundSearchTerm is False:
                     print("[!] Search term '" + search_term + "'" + " was not found is subtitle file '" + srt + "'.")
-
             # If no subtitles were found in the current file.
             else:
                 print("[!] Subtitle file '" + srt + "' is empty.")

@@ -1,14 +1,21 @@
-import random
-from pattern.search import Pattern, STRICT, search
-from pattern.en import parsetree, wordnet, ngrams
+from random import choice
+import sys
+
+from nltk import ngrams, parse
+from nltk.corpus import wordnet
 
 
 def re_search(text, search_string, strict=False):
-    tree = parsetree(text, lemmata=True)
+    tree = parse(text) #, lemmata=True
+    print("Tree")
+    print(tree)
+    results = []
     if strict:
-        results = search(search_string, tree, STRICT)
+        results = []
+        #search(search_string, tree, STRICT)
     else:
-        results = search(search_string, tree)
+        results = []
+        #search(search_string, tree)
     return results
 
 
@@ -65,7 +72,7 @@ def random_hyponym(word):
     to_return = ''
     hyponyms = list_hyponyms(word)
     if len(hyponyms) > 0:
-        to_return = random.choice(hyponyms)
+        to_return = choice(hyponyms)
     return to_return
 
 
@@ -79,9 +86,6 @@ def list_hyponyms(word):
 
 
 if __name__ == '__main__':
-
-    import sys
-
     results = list_hypernyms(sys.argv[1])
     for result in results:
         print(result)

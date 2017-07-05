@@ -17,10 +17,10 @@ elif isdir(inputfile):
     if inputfile.endswith('/') == False:
         inputfile += '/'
     srts = [inputfile + f for f in os.listdir(inputfile) if f.lower().endswith('srt')]
-    assert len(srts) > 0 "No texts found."
+    assert len(srts) > 0
 
 for srt in srts:
-    f = open(srt, 'r')
+    f = open(srt, 'rb')
     for line in f:
         if line.find('-->') == -1:
             text += line

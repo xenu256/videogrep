@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     ngrammer = NGram(total, threshold)
     for srt in srts:
-        f = open(srt, 'r')
+        f = open(srt, 'rb')
         text = f.read()
         f.close()
         ngrammer.feed(text)

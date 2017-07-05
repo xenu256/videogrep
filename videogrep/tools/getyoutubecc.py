@@ -1,9 +1,8 @@
-#!/usr/bin/python
-
 import urllib.request, urllib.parse, urllib.error
 import html.parser
-import re
+from re import search, DOTALL
 import codecs
+
 
 class getyoutubecc():
     """ This class allows you to download the caption from a video from you tube
@@ -23,7 +22,7 @@ class getyoutubecc():
            to specify the name of the track:
             >>> cc = getyoutubecc.getyoutubecc('pNiFoYt69-w','fr','french')
            TRANSLATE VIDEO
-           if you prefer the automatic translation to another language use 
+           if you prefer the automatic translation to another language use
            the lang code
             >>> cc = getyoutubecc.getyoutubecc('pNiFoYt69-w','fr','french', tlang:'es')
     """
@@ -40,7 +39,7 @@ class getyoutubecc():
         print("video track: " + track)
         print("translate video to: " + tlang)
         try:
-            cc = urllib.request.urlopen(cc_url).read() 
+            cc = urllib.request.urlopen(cc_url).read()
         except:
             print("Problem with connection")
         #parse the file to make a easy to modify object with the captions and its time
@@ -50,7 +49,7 @@ class getyoutubecc():
 
     def writeSrtFile(self,filename="caption"):
         srt_lines = self._generateSrt(self.caption_obj) #generate the srt file
-        srtfile = open(filename,'w')
+        srtfile = open(filename,'wb')
         for line in srt_lines:
             srtfile.write( line.encode('utf8') + "\n")
 
@@ -64,12 +63,12 @@ class getyoutubecc():
         cc = cc.split("</text>") # ['<text start="2997.929">So, it will\nhas time', '<text start="3000.929">blah', ..]
         captions = []
         for line in cc:
-            if re.search('text', line):
-                time = re.search(r'start="(\d+)(?:\.(\d+)){0,1}', line).groups() # ('2997','929')
-                time = ( int(time[0]), int(0 if not time[1] else time[1]) )
+            if search('text', line):
+                time = search(r'start="(\d+)(?:\.(\d+)){0,1}', line).groups() # ('2997','929')
+                time = (int(time[0]), int(0 if not time[1] else time[1]) )
                     #convert seconds and millisec to int
-                text = re.search(r'">(.*)', line, re.DOTALL).group(1) # extract text i.e. 'So, it will\nhas time'
-                textlines = [ htmlpar.unescape(htmlpar.unescape( str(lineunparsed,"utf-8") )) for lineunparsed in text.split('\n') ] 
+                text = search(r'">(.*)', line, DOTALL).group(1) # extract text i.e. 'So, it will\nhas time'
+                textlines = [ htmlpar.unescape(htmlpar.unescape( str(lineunparsed,"utf-8") )) for lineunparsed in text.split('\n') ]
                     #unscape chars like &amp; or &#39;
                 ntime = {'hours':time[0]/3600,"min":time[0]%3600/60,"sec":time[0]%3600%60,"msec":time[1]}
                 captions.append({'time':ntime,'textlines':textlines})
@@ -88,14 +87,14 @@ class getyoutubecc():
             #CAPTION NUMBER
             srt_output.append(str(caption_number))
             #TIME
-            time_from = ( caption['time']['hours'], caption['time']['min'], caption['time']['sec'], caption['time']['msec'] ) 
+            time_from = ( caption['time']['hours'], caption['time']['min'], caption['time']['sec'], caption['time']['msec'] )
             if len(captions)>caption_number:
                 #display caption until next one
                 next_caption_time = captions[caption_number]['time']
                 time_to = ( next_caption_time['hours'], next_caption_time['min'], next_caption_time['sec'], next_caption_time['msec'] )
             else:
                 #display caption for 2 seconds
-                time_to = (time_from[0],time_from[1]+2,time_from[2],time_from[3]) 
+                time_to = (time_from[0],time_from[1]+2,time_from[2],time_from[3])
             srt_output.append( (":").join([str(i) for i in time_from[0:-1]])+","+str(time_from[-1])+" --> "+(":").join([str(i) for i in time_to[0:-1]])+","+str(time_to[-1]))
             #CAPTIONS
             for caption_line in caption['textlines']:
@@ -128,7 +127,7 @@ if __name__ == "__main__":
             print('getyoutubecc -v <video_id> -l <language_id> -t <track_name> -T <translate_to>')
             print('Example: getyoutubecc -v pNiFoYt69-w -l fr -t french -T es')
             print('Example: getyoutubecc -v 2XraaWefBd8 -l en ')
-            print('NOTE: if video has a track name, the -t argument is mandatory ') 
+            print('NOTE: if video has a track name, the -t argument is mandatory ')
             sys.exit()
         elif opt in ("-v", "--videoid"):
             videoid = arg

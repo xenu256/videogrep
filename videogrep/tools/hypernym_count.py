@@ -1,15 +1,16 @@
 import sys
-from re import search
 
 from nltk import pos_tag
 from nltk.corpus import wordnet
+
+from videogrep import re_search
 
 
 def hypernym_search(text, search_word):
     output = []
     synset = wordnet.synsets(search_word)[0]
     pos = synset.pos
-    possible_words = search(text, pos)
+    possible_words = re_search(text, pos)
     for match in possible_words:
         word = match[0].string
         synsets = wordnet.synsets(word)
