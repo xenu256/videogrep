@@ -1,22 +1,23 @@
 import sys
-import os
-import re
+from os.path import isfile, isdir
+from re import sub
 
-from pattern.en import tag, tokenize
+from nltk import pos_tag
 
-#text = sys.stdin.read()
+
 inputfile = sys.argv[1]
 srts = []
 text = ''
-if os.path.isfile(inputfile):
+if isfile(inputfile):
     filename = inputfile.split('.')
     filename[-1] = 'srt'
     srts = ['.'.join(filename)]
 
-elif os.path.isdir(inputfile):
+elif isdir(inputfile):
     if inputfile.endswith('/') == False:
         inputfile += '/'
     srts = [inputfile + f for f in os.listdir(inputfile) if f.lower().endswith('srt')]
+    assert len(srts) > 0 "No texts found."
 
 for srt in srts:
     f = open(srt, 'r')
@@ -25,8 +26,8 @@ for srt in srts:
             text += line
     f.close()
 
-text = re.sub(r'^\d+[\n\r]', '', text, flags=re.MULTILINE)
-tags = tag(text)
+text = sub(r'^\d+[\n\r]', '', text, flags=re.MULTILINE)
+tags = pos_tag(text)
 pos = [t[1] for t in tags]
 ngrams = {}
 n = int(sys.argv[2])
