@@ -1,5 +1,9 @@
 import sys
-from pattern.en import ngrams
+from os.path import isdir, isfile
+from os import listdir
+
+from nltk import ngrams
+
 
 class NGram(object):
 
@@ -30,22 +34,20 @@ class NGram(object):
 
 
 if __name__ == '__main__':
-    import sys
-    import os
     inputfile = sys.argv[1]
     total = int(sys.argv[2])
     threshold = int(sys.argv[3])
     srts = []
 
-    if os.path.isfile(inputfile):
+    if isfile(inputfile):
         filename = inputfile.split('.')
         filename[-1] = 'srt'
         srts = ['.'.join(filename)]
 
-    elif os.path.isdir(inputfile):
+    elif isdir(inputfile):
         if inputfile.endswith('/') == False:
             inputfile += '/'
-        srts = [inputfile + f for f in os.listdir(inputfile) if f.lower().endswith('srt')]
+        srts = [inputfile + f for f in listdir(inputfile) if f.lower().endswith('srt')]
 
     ngrammer = NGram(total, threshold)
     for srt in srts:

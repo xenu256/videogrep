@@ -1,16 +1,19 @@
+from os.path import isfile, isdir
+from os import listdir
+
 from . import videogrep
-import os
+
 
 def silence(inputfile, outputfile, maxclips, minsilence, maxsilence, padding=0, test=False, randomize=False):
-    if os.path.isfile(inputfile):
+    if isfile(inputfile):
         filename = inputfile.split('.')
         filename[-1] = 'srt'
         srts = ['.'.join(filename)]
 
-    elif os.path.isdir(inputfile):
+    elif isdir(inputfile):
         if inputfile.endswith('/') == False:
             inputfile += '/'
-        srts = [inputfile + f for f in os.listdir(inputfile) if f.lower().endswith('srt')]
+        srts = [inputfile + f for f in listdir(inputfile) if f.lower().endswith('srt')]
 
     timestamps = []
     for srt in srts:
@@ -19,7 +22,7 @@ def silence(inputfile, outputfile, maxclips, minsilence, maxsilence, padding=0, 
             start, end = videogrep.convert_timespan(timestamp)
             for ext in videogrep.usable_extensions:
                 videofile = srt.replace('.srt', '.' + ext)
-                if os.path.isfile(videofile):
+                if isfile(videofile):
                     timestamps.append({'start': start, 'end': end, 'file': videofile})
 
     composition = []

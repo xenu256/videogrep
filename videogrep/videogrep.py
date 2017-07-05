@@ -6,7 +6,6 @@ import gc
 from subprocess import PIPE, PIPE, Popen
 from collections import OrderedDict
 
-import pattern
 from . import searcher
 from audiogrep import convert_to_wav, transcribe, search as audiogrepsearch
 
@@ -14,6 +13,7 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.compositing.concatenate import concatenate
 
 from .timecode import Timecode
+
 
 usable_extensions = ['mp4', 'avi', 'mov', 'mkv', 'm4v']
 BATCH_SIZE = 20

@@ -1,12 +1,15 @@
 import sys
-from pattern.en import wordnet, parse, tag
+from re import search
+
+from nltk import pos_tag
+from nltk.corpus import wordnet
 
 
 def hypernym_search(text, search_word):
     output = []
     synset = wordnet.synsets(search_word)[0]
     pos = synset.pos
-    possible_words = re_search(text, pos)
+    possible_words = search(text, pos)
     for match in possible_words:
         word = match[0].string
         synsets = wordnet.synsets(word)
@@ -19,7 +22,7 @@ def hypernym_search(text, search_word):
 text = sys.stdin.read()
 
 hypernyms = {}
-for word, pos in tag(text):
+for word, pos in pos_tag(text):
     synsets = wordnet.synsets(word)
     if len(synsets) > 0:
         try:
